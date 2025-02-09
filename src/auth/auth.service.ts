@@ -42,7 +42,7 @@ export class AuthService {
   }
 
   async login(userId: number, name: string, role: Role) {
-    const { accessToken, refreshToken } = await this.gwnerateTokens(userId);
+    const { accessToken, refreshToken } = await this.generateTokens(userId);
 
     const hashedRT = await hash(refreshToken);
 
@@ -57,7 +57,7 @@ export class AuthService {
     };
   }
 
-  async gwnerateTokens(userId: number) {
+  async generateTokens(userId: number) {
     const payload: AuthJwtPayload = { sub: userId };
 
     const [accessToken, refreshToken] = await Promise.all([
@@ -82,19 +82,23 @@ export class AuthService {
 
     if (!user) throw new UnauthorizedException('User not found!');
 
+    if (!user.hashedRefreshToken)
+      throw new UnauthorizedException('User was signed out');
+
     const refreshTokenMatched = await verify(
-      user.hashedRefreshToken!,
+      user.hashedRefreshToken,
       refreshToken,
     );
 
     if (!refreshTokenMatched)
       throw new UnauthorizedException('Invalid refresh token!');
+
     const currentUser = { id: user.id };
     return currentUser;
   }
 
   async refreshToken(userId: number, name: string) {
-    const { accessToken, refreshToken } = await this.gwnerateTokens(userId);
+    const { accessToken, refreshToken } = await this.generateTokens(userId);
 
     const hashedRT = await hash(refreshToken);
 
