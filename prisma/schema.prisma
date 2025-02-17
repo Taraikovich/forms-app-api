@@ -7,52 +7,60 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Comment {
-  id        Int       @id @default(autoincrement())
-  text      String
-  createdAt DateTime? @default(now()) @db.Timestamp(6)
-  user_id   Int
-  post_id   Int
-  user      User      @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "comments_author_id_users_id_fk")
-  post      Post      @relation(fields: [post_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "comments_post_id_posts_id_fk")
-}
-
-model Post {
-  id        Int       @id @default(autoincrement())
-  createdAt DateTime  @default(now())
-  slug      String    @unique
-  title     String
-  desc      String
-  img       String?
-  views     Int       @default(0)
-  catSlug   String
-  userEmail String
-  comments  Comment[]
-  cat       Category  @relation(fields: [catSlug], references: [slug])
-  user      User      @relation(fields: [userEmail], references: [email])
-}
-
 model User {
-  id                 Int       @id @default(autoincrement())
-  email              String    @unique
+  id                 String       @id @default(cuid())
+  email              String       @unique
   name               String
   password           String
   hashedRefreshToken String?
-  role               Role      @default(USER)
-  comments           Comment[]
-  posts              Post[]
+  role               Role         @default(USER)
+  templates          Template[]
 }
 
-model Category {
-  id    Int     @id @default(autoincrement())
-  slug  String  @unique
-  title String
-  img   String?
-  Posts Post[]
+model Template {
+  id          String      @id @default(cuid())
+  title       String
+  description String
+  image       String
+  topicId     String
+  topic       Topic       @relation(fields: [topicId], references: [id])
+  tags        Tag[]       @relation("TemplateTags")
+  questions   Question[]
+  createdAt   DateTime    @default(now())
+  creatorId   String
+  creator     User        @relation(fields: [creatorId], references: [id])
+}
+
+model Tag {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  templates   Template[]    @relation("TemplateTags")
+}
+
+model Question {
+  id          String     @id @default(cuid())
+  title       String
+  description String
+  type        AnswerType
+  templateId  String
+  template    Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+}
+
+model Topic {
+  id          String    @id @default(cuid())
+  name        String
+  templates   Template[]
 }
 
 enum Role {
   ADMIN
   EDITOR
   USER
+}
+
+enum AnswerType {
+  single_line
+  multi_line
+  integer
+  checkbox
 }

@@ -14,8 +14,9 @@ import { LocalAuthGuard } from './guards/local-auth/local-auth.guard';
 import { RefreshAuthGuard } from './guards/refresh-auth/refresh-auth.guard';
 import { GoogleAuthGuard } from './guards/google-auth/google-auth.guard';
 import { Response } from 'express';
-import { Public } from './decorators/public.dcorator';
+import { Public } from './decorators/public.decorator';
 import { Roles } from './decorators/roles.decorator';
+import { Role } from '@prisma/client';
 
 @Controller('auth')
 export class AuthController {
@@ -30,13 +31,16 @@ export class AuthController {
   @Public()
   @UseGuards(LocalAuthGuard)
   @Post('signin')
-  login(@Request() req) {
+  login(
+    @Request()
+    req: Request & { user: { id: string; name: string; role: Role } },
+  ) {
     return this.authService.login(req.user.id, req.user.name, req.user.role);
   }
 
   @Roles('ADMIN', 'EDITOR')
   @Get('protected')
-  getAll(@Request() req) {
+  getAll(@Request() req: Request & { user: { id: string } }) {
     return {
       message: `Now you can access to this protected API. This is your userId: ${req.user.id}`,
     };
@@ -45,7 +49,9 @@ export class AuthController {
   @Public()
   @UseGuards(RefreshAuthGuard)
   @Post('refresh')
-  refreshToken(@Request() req) {
+  refreshToken(
+    @Request() req: Request & { user: { id: string; name: string } },
+  ) {
     return this.authService.refreshToken(req.user.id, req.user.name);
   }
 
@@ -57,7 +63,11 @@ export class AuthController {
   @Public()
   @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
-  async googleCallback(@Request() req, @Res() res: Response) {
+  async googleCallback(
+    @Request()
+    req: Request & { user: { id: string; name: string; role: Role } },
+    @Res() res: Response,
+  ) {
     const response = await this.authService.login(
       req.user.id,
       req.user.name,
@@ -69,7 +79,7 @@ export class AuthController {
   }
 
   @Post('signout')
-  signOut(@Req() req) {
+  signOut(@Req() req: Request & { user: { id: string } }) {
     return this.authService.signOut(req.user.id);
   }
 }

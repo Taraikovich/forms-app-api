@@ -41,7 +41,7 @@ export class AuthService {
     return { id: user.id, name: user.name, role: user.role };
   }
 
-  async login(userId: number, name: string, role: Role) {
+  async login(userId: string, name: string, role: Role) {
     const { accessToken, refreshToken } = await this.generateTokens(userId);
 
     const hashedRT = await hash(refreshToken);
@@ -57,7 +57,7 @@ export class AuthService {
     };
   }
 
-  async generateTokens(userId: number) {
+  async generateTokens(userId: string) {
     const payload: AuthJwtPayload = { sub: userId };
 
     const [accessToken, refreshToken] = await Promise.all([
@@ -68,7 +68,7 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async validateJwtUser(userId: number) {
+  async validateJwtUser(userId: string) {
     const user = await this.userService.findOne(userId);
 
     if (!user) throw new UnauthorizedException('User not found!');
@@ -77,7 +77,7 @@ export class AuthService {
     return currentUser;
   }
 
-  async validateRefreshToken(userId: number, refreshToken: string) {
+  async validateRefreshToken(userId: string, refreshToken: string) {
     const user = await this.userService.findOne(userId);
 
     if (!user) throw new UnauthorizedException('User not found!');
@@ -97,7 +97,7 @@ export class AuthService {
     return currentUser;
   }
 
-  async refreshToken(userId: number, name: string) {
+  async refreshToken(userId: string, name: string) {
     const { accessToken, refreshToken } = await this.generateTokens(userId);
 
     const hashedRT = await hash(refreshToken);
@@ -120,7 +120,7 @@ export class AuthService {
     return await this.userService.create(googleUser);
   }
 
-  async signOut(userId: number) {
+  async signOut(userId: string) {
     return await this.userService.updateHashedRefreshToken(userId, null);
   }
 }
