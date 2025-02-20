@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { hash } from 'argon2';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -42,6 +43,60 @@ export class UserService {
       data: {
         hashedRefreshToken: hashedRT,
       },
+    });
+  }
+
+  async getAllUsers(page = 1, limit = 10) {
+    const skip = (page - 1) * limit;
+
+    const [count, users] = await Promise.all([
+      this.prisma.user.count({
+        where: { deletedAt: { equals: null } },
+      }),
+      this.prisma.user.findMany({
+        where: { deletedAt: { equals: null } },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          blockedAt: true,
+        },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    const totalPages = Math.ceil(count / limit);
+
+    return { users, totalPages, currentPage: page };
+  }
+
+  async blockUsers(usersIds: string[]) {
+    return this.prisma.user.updateMany({
+      where: { id: { in: usersIds } },
+      data: { blockedAt: new Date() },
+    });
+  }
+
+  async unblockUsers(usersIds: string[]) {
+    return this.prisma.user.updateMany({
+      where: { id: { in: usersIds } },
+      data: { blockedAt: null },
+    });
+  }
+
+  async deleteUsers(usersIds: string[]) {
+    return this.prisma.user.updateMany({
+      where: { id: { in: usersIds } },
+      data: { deletedAt: new Date() },
+    });
+  }
+
+  async setRole(userIds: string[], role: Role) {
+    return await this.prisma.user.updateMany({
+      where: { id: { in: userIds } },
+      data: { role: role },
     });
   }
 }

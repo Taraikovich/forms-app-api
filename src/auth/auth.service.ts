@@ -32,6 +32,8 @@ export class AuthService {
     const user = await this.userService.findByEmail(email);
 
     if (!user) throw new UnauthorizedException('User not found!');
+    if (user.blockedAt) throw new UnauthorizedException('User blocked!');
+    if (user.deletedAt) throw new UnauthorizedException('User deleted!');
 
     const isPasswordMatched = await verify(user.password, password);
 
@@ -72,6 +74,8 @@ export class AuthService {
     const user = await this.userService.findOne(userId);
 
     if (!user) throw new UnauthorizedException('User not found!');
+    if (user.blockedAt) throw new UnauthorizedException('User blocked!');
+    if (user.deletedAt) throw new UnauthorizedException('User deleted!');
 
     const currentUser = { id: user.id, role: user.role };
     return currentUser;
@@ -81,6 +85,8 @@ export class AuthService {
     const user = await this.userService.findOne(userId);
 
     if (!user) throw new UnauthorizedException('User not found!');
+    if (user.blockedAt) throw new UnauthorizedException('User blocked!');
+    if (user.deletedAt) throw new UnauthorizedException('User deleted!');
 
     if (!user.hashedRefreshToken)
       throw new UnauthorizedException('User was signed out');
@@ -93,7 +99,7 @@ export class AuthService {
     if (!refreshTokenMatched)
       throw new UnauthorizedException('Invalid refresh token!');
 
-    const currentUser = { id: user.id };
+    const currentUser = { id: user.id, role: user.role };
     return currentUser;
   }
 
