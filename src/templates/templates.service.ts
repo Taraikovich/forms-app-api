@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTemplateDto } from './dto/create-template.dto';
+import { UpdateTemplateDto } from './dto/update-template.dto';
 
 @Injectable()
 export class TemplatesService {
@@ -37,6 +38,58 @@ export class TemplatesService {
             description: question.description,
             type: question.answerType,
           })),
+        },
+      },
+    });
+  }
+
+  async update(templateId: string, updateTemplateDto: UpdateTemplateDto) {
+    const tagsData =
+      updateTemplateDto.tags.length > 0
+        ? {
+            connectOrCreate: updateTemplateDto.tags.map((tagName) => ({
+              where: { name: tagName },
+              create: { name: tagName },
+            })),
+          }
+        : undefined;
+
+    const questionIds = updateTemplateDto.questions
+      .map((q) => q.id)
+      .filter((id): id is string => Boolean(id));
+
+    return await this.prisma.template.update({
+      where: { id: templateId },
+      data: {
+        title: updateTemplateDto.title,
+        description: updateTemplateDto.description,
+        image: updateTemplateDto.image,
+        topic: {
+          connect: { id: updateTemplateDto.topic },
+        },
+        tags: tagsData,
+        questions: {
+          deleteMany: {
+            AND: [{ id: { notIn: questionIds } }, { templateId }],
+          },
+          update: updateTemplateDto.questions
+            .filter((q) => q.id)
+            .map((question) => ({
+              where: { id: question.id },
+              data: {
+                title: question.title,
+                description: question.description,
+                type: question.type,
+              },
+            })),
+          create: updateTemplateDto.questions
+            .filter((q) => !q.id)
+            .map((question) => ({
+              title: question.title,
+              description: question.description,
+              type: question.type,
+              templateId,
+            })),
         },
       },
     });
@@ -80,6 +133,33 @@ export class TemplatesService {
     return { templates, count, totalPages, currentPage: page };
   }
 
+  async getAllTemplates(page = 1, limit = 10) {
+    const skip = (page - 1) * limit;
+
+    const [count, templates] = await Promise.all([
+      this.prisma.template.count(),
+      this.prisma.template.findMany({
+        select: {
+          id: true,
+          title: true,
+          creator: {
+            select: {
+              name: true,
+            },
+          },
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    const totalPages = Math.ceil(count / limit);
+
+    return { templates, count, totalPages, currentPage: page };
+  }
+
   async getTemplateById(id: string) {
     const template = await this.prisma.template.findUnique({
       where: {
@@ -93,8 +173,10 @@ export class TemplatesService {
             name: true,
           },
         },
+        tags: true,
         topic: {
           select: {
+            id: true,
             name: true,
           },
         },

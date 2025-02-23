@@ -5,12 +5,14 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Query,
   Request,
 } from '@nestjs/common';
 import { TemplatesService } from './templates.service';
 import { CreateTemplateDto } from './dto/create-template.dto';
 import { Public } from 'src/auth/decorators/public.decorator';
+import { UpdateTemplateDto } from './dto/update-template.dto';
 
 @Controller('templates')
 export class TemplatesController {
@@ -22,6 +24,14 @@ export class TemplatesController {
     @Body() createTemplateDto: CreateTemplateDto,
   ) {
     return this.templatesService.create(createTemplateDto, req.user.id);
+  }
+
+  @Put('update/:id')
+  updateTemplate(
+    @Param('id') id: string,
+    @Body() updateTemplateDto: UpdateTemplateDto,
+  ) {
+    return this.templatesService.update(id, updateTemplateDto);
   }
 
   @Public()
@@ -53,6 +63,14 @@ export class TemplatesController {
       Number(page),
       Number(limit),
     );
+  }
+
+  @Get('all')
+  getAllTemplates(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
+    return this.templatesService.getAllTemplates(Number(page), Number(limit));
   }
 
   @Public()
