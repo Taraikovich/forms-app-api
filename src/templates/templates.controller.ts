@@ -79,6 +79,18 @@ export class TemplatesController {
     return this.templatesService.getTags(query);
   }
 
+  @Public()
+  @Get('top')
+  getTopTemplates() {
+    return this.templatesService.getTopFiveTemplates();
+  }
+
+  @Public()
+  @Get('top-tags')
+  getTopTags() {
+    return this.templatesService.getTopTags();
+  }
+
   @Delete('delete')
   deleteTemplates(@Body() body: string[]) {
     console.log(body);

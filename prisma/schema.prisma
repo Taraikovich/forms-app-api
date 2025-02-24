@@ -18,6 +18,7 @@ model User {
   forms              Form[]
   deletedAt          DateTime?
   blockedAt          DateTime?
+  theme              Theme        @default(dark)
 }
 
 model Template {
@@ -90,4 +91,9 @@ enum AnswerType {
   multi_line
   integer
   checkbox
+}
+
+enum Theme {
+  dark
+  light
 }

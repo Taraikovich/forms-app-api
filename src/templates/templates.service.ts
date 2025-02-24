@@ -212,4 +212,42 @@ export class TemplatesService {
       },
     });
   }
+
+  async getTopFiveTemplates() {
+    return await this.prisma.template.findMany({
+      select: {
+        id: true,
+        title: true,
+        _count: {
+          select: {
+            forms: true,
+          },
+        },
+      },
+      orderBy: {
+        forms: {
+          _count: 'desc',
+        },
+      },
+      take: 5,
+    });
+  }
+
+  async getTopTags() {
+    return await this.prisma.tag.findMany({
+      select: {
+        id: true,
+        name: true,
+        _count: {
+          select: { templates: true },
+        },
+      },
+      orderBy: {
+        templates: {
+          _count: 'desc',
+        },
+      },
+      take: 20,
+    });
+  }
 }

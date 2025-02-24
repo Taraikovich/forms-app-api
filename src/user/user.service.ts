@@ -99,4 +99,37 @@ export class UserService {
       data: { role: role },
     });
   }
+
+  async getTheme(userId: string) {
+    return await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        theme: true,
+      },
+    });
+  }
+
+  async setTheme(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        theme: true,
+      },
+    });
+
+    if (!user) return;
+
+    const newTheme = user.theme === 'dark' ? 'light' : 'dark';
+
+    return await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: { theme: newTheme },
+    });
+  }
 }

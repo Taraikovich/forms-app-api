@@ -1,7 +1,17 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Request,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
+import { Public } from 'src/auth/decorators/public.decorator';
 
 @Controller('user')
 export class UserController {
@@ -38,5 +48,17 @@ export class UserController {
   @Post('role')
   setRole(@Body() body: { usersId: string[]; role: Role }) {
     return this.userService.setRole(body.usersId, body.role);
+  }
+
+  @Public()
+  @Get('theme/:id')
+  getTheme(@Param() param: { id: string }) {
+    return this.userService.getTheme(param.id);
+  }
+
+  @Public()
+  @Patch('theme/:id')
+  setTheme(@Param() param: { id: string }) {
+    return this.userService.setTheme(param.id);
   }
 }
