@@ -61,4 +61,9 @@ export class UserController {
   setTheme(@Param() param: { id: string }) {
     return this.userService.setTheme(param.id);
   }
+
+  @Get('email')
+  getEmail(@Request() req: { user: { id: string } }) {
+    return this.userService.getEmail(req.user.id);
+  }
 }

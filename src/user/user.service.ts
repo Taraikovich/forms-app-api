@@ -132,4 +132,11 @@ export class UserService {
       data: { theme: newTheme },
     });
   }
+
+  async getEmail(userId: string) {
+    return await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+  }
 }
